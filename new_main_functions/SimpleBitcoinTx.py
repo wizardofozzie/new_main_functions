@@ -454,7 +454,7 @@ class SimpleBitcoinTx(object):
         sighashall_thisinput_tx = sighashall_thisinput_tx + str("01000000") # add SIGHASH_ALL to end
         sighashall_thisinput_tx = str(sighashall_thisinput_tx)
         txhash = double_sha256(sighashall_thisinput_tx)
-        newsig, compressedpubkey = sign_hash(txhash,privkey,double_sha256(hexlify_(os.urandom(32),64)),True)
+        newsig, compressedpubkey = sign_hash(txhash,privkey,str("RFC6979_SHA256"),True)
         uncompressedpubkey = uncompress_pubkey(compressedpubkey)
         newsig = str(newsig + str("01")) # add SIGHASH_ALL to end of sig
         if hash160(compressedpubkey) == self.inputs[tx_input_num][2][6:-4]:
@@ -535,7 +535,7 @@ class SimpleBitcoinTx(object):
         sighashall_thisinput_tx = sighashall_thisinput_tx + str("01000000") # add SIGHASH_ALL to end
         sighashall_thisinput_tx = str(sighashall_thisinput_tx)
         txhash = double_sha256(sighashall_thisinput_tx)
-        newsig, compressedpubkey = sign_hash(txhash,privkey,double_sha256(hexlify_(os.urandom(32),64)),True)
+        newsig, compressedpubkey = sign_hash(txhash,privkey,str("RFC6979_SHA256"),True)
         uncompressedpubkey = uncompress_pubkey(compressedpubkey)
         newsig = str(newsig + str("01")) # add SIGHASH_ALL to end of sig
         try:
