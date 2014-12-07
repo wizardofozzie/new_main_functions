@@ -28,10 +28,13 @@ from StealthAddress import *
 from Bip32Key import *
 from BIP39 import *
 from ElectrumV1 import *
+from ElectrumV2Seed import * # Not bug-checked yet, do not use!!!
 from DER_sign_and_verify import *
 from SimpleBitcoinTx import * # Not bug-checked yet, do not use!!!
 
 # TODO:  Write doctests for SimpleBitcoinTx, check for bugs, fix bugs. Make sure doctests cover all use cases.
+
+# TODO:  Doctest sha512 in hash_funcs and all of Electrum V2
 
 # TODO:  Write extensive unittests for this entire module.
 

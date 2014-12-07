@@ -46,7 +46,30 @@ def double_sha256(hexinput=""):
     assert len(output) == 64
     return str(output)
 
-def ripemd160(inputhex):
+def sha512(inputhex=""):
+    """
+    >>> sha512("a3240f33693e36dd24dfe9b36c2281e4748834bf")
+    'dd0c4167815a7d8b5e03d567d7483689e95fbd7263bf5395b34963db25775a111d61721b9232730036467e1c2638ab0bcf7ce372dc0afd440c9d497ddfac4a54'
+    """
+
+    try:
+        test1 = unhexlify_(inputhex)
+        test2 = int(inputhex,16)
+    except:
+        if inputhex == '':
+            return str("cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e")
+        else:
+            raise TypeError("Input is not hex or is odd length.")
+    else:
+        test1, test2 = None, None
+    try:
+        output = hexlify_(hashlib.sha512(unhexlify_(inputhex)).digest())
+    except Exception as e:
+        raise Exception(str(e))
+    assert len(output) == 128
+    return str(output)
+
+def ripemd160(inputhex=""):
     """
     A ripemd function that acts the same as the sha256 function, rather
     than the weird way ripemd works in hashlib.  This differs from sha256
@@ -75,7 +98,7 @@ def ripemd160(inputhex):
     assert len(output) == 40
     return output
 
-def hash160(inputhex):
+def hash160(inputhex=""):
     """
     Return ripemd160(sha256()) for given input hex.
 
