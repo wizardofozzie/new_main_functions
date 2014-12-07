@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from hexlify_permissive import *
+from hash_funcs import *
 
 def base58_check(payload,prefix='',postfix=''):
     """
