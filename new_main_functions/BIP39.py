@@ -1,15 +1,15 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from ec_math import *
-from hexlify_permissive import *
-from hash_funcs import *
-from base58_hex_conversions import *
-from bitcoin_funcs import *
-from misc_funcs_and_vars import *
-from CoinFromKey import *
-from StealthAddress import *
-from Bip32Key import *
+from .ec_math import *
+from .hexlify_permissive import *
+from .hash_funcs import *
+from .base58_hex_conversions import *
+from .bitcoin_funcs import *
+from .misc_funcs_and_vars import *
+from .CoinFromKey import *
+from .StealthAddress import *
+from .Bip32Key import *
 
 class Bip39EngClass(object):
     """

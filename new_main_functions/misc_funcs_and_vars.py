@@ -1,8 +1,8 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from hexlify_permissive import *
-from hash_funcs import *
+from .hexlify_permissive import *
+from .hash_funcs import *
 
 def reverse_bytes(hexstrinput):
     """

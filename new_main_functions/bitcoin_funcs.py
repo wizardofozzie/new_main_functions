@@ -1,10 +1,10 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from ec_math import *
-from hexlify_permissive import *
-from hash_funcs import *
-from base58_hex_conversions import *
+from .ec_math import *
+from .hexlify_permissive import *
+from .hash_funcs import *
+from .base58_hex_conversions import *
 
 def uncompress_pubkey(compressedPubKey):
     """

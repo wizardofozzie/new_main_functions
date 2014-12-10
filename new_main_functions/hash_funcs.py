@@ -1,7 +1,7 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from hexlify_permissive import *
+from .hexlify_permissive import *
 
 def sha256(inputhex=""):
     """

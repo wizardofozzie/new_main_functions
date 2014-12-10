@@ -1,14 +1,14 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from ec_math import *
-from hexlify_permissive import *
-from hash_funcs import *
-from base58_hex_conversions import *
-from bitcoin_funcs import *
-from misc_funcs_and_vars import *
+from .ec_math import *
+from .hexlify_permissive import *
+from .hash_funcs import *
+from .base58_hex_conversions import *
+from .bitcoin_funcs import *
+from .misc_funcs_and_vars import *
 
-def sign_hash(hash,privkey,randnonce=str("RFC6979_SHA512"),compresspubkeyout=True):
+def sign_hash(hash,privkey,randnonce=str("RFC6979_SHA256"),compresspubkeyout=True):
     """
     Takes much code from WBN:
     https://github.com/wobine/blackboard101/blob/master/EllipticCurvesPart5-TheMagic-SigningAndVerifying.py
