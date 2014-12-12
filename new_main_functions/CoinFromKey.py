@@ -1,6 +1,14 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Relative import off for doctests
+# from ec_math import *
+# from hexlify_permissive import *
+# from hash_funcs import *
+# from base58_hex_conversions import *
+# from bitcoin_funcs import *
+# from misc_funcs_and_vars import *
+
 from .ec_math import *
 from .hexlify_permissive import *
 from .hash_funcs import *
@@ -96,7 +104,7 @@ class CoinFromKey(object):
             self.pubkeyC = self.keyinput
         elif len(self.keyinput) == 130:
             self.pubkeyU = str(self.keyinput)
-            self.pubkeyC = compress_pub_key(self.keyinput)
+            self.pubkeyC = compress_pubkey(self.keyinput)
         self.addressU = pubkey_to_address(self.pubkeyU,self.versionbyte)
         self.addressC = pubkey_to_address(self.pubkeyC,self.versionbyte)
         if self.preferCompressed:

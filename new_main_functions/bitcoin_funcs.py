@@ -1,6 +1,12 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Relative import off for doctests
+# from ec_math import *
+# from hexlify_permissive import *
+# from hash_funcs import *
+# from base58_hex_conversions import *
+
 from .ec_math import *
 from .hexlify_permissive import *
 from .hash_funcs import *
@@ -41,11 +47,11 @@ def uncompress_pubkey(compressedPubKey):
     y = hexlify_(y,64)
     return hexlify_(unhexlify_(str(str('04') + str(x) + str(y))))
 
-def compress_pub_key(uncompressedPubKey):
+def compress_pubkey(uncompressedPubKey):
     """
     Compress an 04 prefix public key to a 02/03 key
 
-    >>> compress_pub_key("046c6a02ad4c2dc74091dc10b04ec8eb255bca5480c9d782c7510e4e4e02ad25abeb6228aaa8a25e47c01def7f04bdd0485c7535886161e94a1be568bc859c0db4")
+    >>> compress_pubkey("046c6a02ad4c2dc74091dc10b04ec8eb255bca5480c9d782c7510e4e4e02ad25abeb6228aaa8a25e47c01def7f04bdd0485c7535886161e94a1be568bc859c0db4")
     '026c6a02ad4c2dc74091dc10b04ec8eb255bca5480c9d782c7510e4e4e02ad25ab'
     """
 
@@ -119,7 +125,7 @@ def privkey_to_pubkey(privkey,compressed=True):
     uncompressedpub = hexlify_(binascii.unhexlify('04' + pubX + pubY))
     assert len(uncompressedpub) == 130
     if compressed:
-        return compress_pub_key(uncompressedpub)
+        return compress_pubkey(uncompressedpub)
     else:
         return uncompressedpub
 
@@ -224,7 +230,7 @@ def multiply_pub_and_priv(pubkey,privkey,outputCompressed=True):
     outX, outY = ec_multiply(pubXint,pubYint,privkeyInt)
     outX, outY = hexlify_(outX,64), hexlify_(outY,64)
     if outputCompressed:
-        return compress_pub_key(str("04" + outX + outY))
+        return compress_pubkey(str("04" + outX + outY))
     else:
         return str("04" + outX + outY)
 
@@ -277,7 +283,7 @@ def add_pubkeys(pubkey1,pubkey2,outputCompressed=True):
     outX, outY = ec_add(pub1Xint,pub1Yint,pub2Xint,pub2Yint)
     outX, outY = hexlify_(outX,64), hexlify_(outY,64)
     if outputCompressed:
-        return compress_pub_key(str("04") + outX + outY)
+        return compress_pubkey(str("04") + outX + outY)
     else:
         return str("04") + outX + outY
 

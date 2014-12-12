@@ -17,6 +17,23 @@ import binascii
 import hashlib
 import hmac
 
+# Relative import off for doctests
+# from ec_math import *
+# from hexlify_permissive import *
+# from hash_funcs import *
+# from base58_hex_conversions import *
+# from bitcoin_funcs import *
+# from misc_funcs_and_vars import *
+# from CoinFromKey import *
+# from StealthAddress import *
+# from Bip32Key import *
+# from BIP39 import *
+# from ElectrumV1 import *
+# from ElectrumV2Seed import * # Not bug-checked yet, do not use!!!
+# from DER_sign_and_verify import *
+# from SimpleBitcoinTx import * # Not bug-checked yet, do not use!!!
+# from msg_sign_and_verify import *
+
 from .ec_math import *
 from .hexlify_permissive import *
 from .hash_funcs import *
@@ -31,6 +48,7 @@ from .ElectrumV1 import *
 from .ElectrumV2Seed import * # Not bug-checked yet, do not use!!!
 from .DER_sign_and_verify import *
 from .SimpleBitcoinTx import * # Not bug-checked yet, do not use!!!
+from .msg_sign_and_verify import *
 
 # TODO:  Write doctests for SimpleBitcoinTx, check for bugs, fix bugs. Make sure doctests cover all use cases.
 

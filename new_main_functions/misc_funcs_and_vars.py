@@ -1,8 +1,19 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Relative import off for doctests
+# from hexlify_permissive import *
+# from hash_funcs import *
+
 from .hexlify_permissive import *
 from .hash_funcs import *
+
+def normalize_input(input):
+    input = str(input)
+    if int(sys.version_info.major) == 2:
+        input = unicode(input)
+    input = str(unicodedata.normalize('NFC',input))
+    return str(input)
 
 def reverse_bytes(hexstrinput):
     """
@@ -29,6 +40,72 @@ def reverse_bytes(hexstrinput):
         else:
             output = output + hexstrinput[-1*(j+2):-1*(j)]
     return str(output)
+
+def varint_bytesize(bytelength_int):
+    if 'int' not in str(type(bytelength_int)) and 'long' not in str(type(bytelength_int)):
+        raise Exception("Input size must be int.")
+    try:
+        size = int(bytelength_int)
+    except:
+        raise Exception("Input size must be int.")
+    if size < 1:
+        raise Exception("Input size must be a positive number, not zero or negative.")
+    elif size > 18446744073709551615:
+        raise Exception("This is a joke, right?")
+    elif size < 253:
+        hexsize = hexlify_(size,2)
+        hexsize = str(hexsize)
+        assert len(hexsize) == 2
+    elif size < 65536:
+        hexsize = hexlify_(size,4)
+        assert len(hexsize) == 4
+        hexsize = reverse_bytes(hexsize)
+        hexsize = str(str("fd") + hexsize)
+        assert len(hexsize) == 6
+    elif size < 4294967296:
+        hexsize = hexlify_(size,8)
+        assert len(hexsize) == 8
+        hexsize = reverse_bytes(hexsize)
+        hexsize = str(str("fe") + hexsize)
+        assert len(hexsize) == 10
+    elif size < 18446744073709551616:
+        hexsize = hexlify_(size,16)
+        assert len(hexsize) == 16
+        hexsize = reverse_bytes(hexsize)
+        hexsize = str(str("ff") + hexsize)
+        assert len(hexsize) == 18
+    return hexsize
+
+def bytesize_to_varint(inputhex):
+    """
+    Outputs two ints: first is the integer byte size indicated by the varint bytes, and the second is the total length of the varint bytes, so you know how much to cut off after you have read the data.
+    """
+    try:
+        inputhex = hexlify_(unhexlify_(inputhex))
+        test2 = int(inputhex,16)
+        test2 = None
+    except:
+        raise TypeError("Input must be hex")
+    assert not len(inputhex) % 2
+    if inputhex[:2] == "ff":
+        if len(inputhex) < 18:
+            raise Exception("Input size byte is 0xff which indicates 8 bytes follow it, but the length of the input is less than that.  Please input at least the full varint bytes -- or longer to be safe.  This function will simply read the correct amount off the front.")
+        outputint = int(reverse_bytes(inputhex[2:18]),16)
+        byte_len_to_trim_incl_firstbyte = int(9)
+    elif inputhex[:2] == "fe":
+        if len(inputhex) < 10:
+            raise Exception("Input size byte is 0xfe which indicates 4 bytes follow it, but the length of the input is less than that.  Please input at least the full varint bytes -- or longer to be safe.  This function will simply read the correct amount off the front.")
+        outputint = int(reverse_bytes(inputhex[2:10]),16)
+        byte_len_to_trim_incl_firstbyte = int(5)
+    elif inputhex[:2] == "fd":
+        if len(inputhex) < 6:
+            raise Exception("Input size byte is 0xfd which indicates 2 bytes follow it, but the length of the input is less than that.  Please input at least the full varint bytes -- or longer to be safe.  This function will simply read the correct amount off the front.")
+        outputint = int(reverse_bytes(inputhex[2:6]),16)
+        byte_len_to_trim_incl_firstbyte = int(3)
+    else:
+        outputint = int(inputhex[:2],16)
+        byte_len_to_trim_incl_firstbyte = int(1)
+    return int(outputint), int(byte_len_to_trim_incl_firstbyte)
 
 class MerkleTree_DoubleSHA256(object):
     """

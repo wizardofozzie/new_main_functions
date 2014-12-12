@@ -1,6 +1,11 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Relative import off for doctests
+# from ec_math import *
+# from hexlify_permissive import *
+
+from .ec_math import *
 from .hexlify_permissive import *
 
 def sha256(inputhex=""):
@@ -106,7 +111,13 @@ def hash160(inputhex=""):
     '3133cb8559c130b1423244130eb659c2ae6cd83d'
     >>> hash160("0259b4baf72f02af2b35d8c2cde59b828f9012478b2104cbfcc14c10e256e8bfbc")
     'ad63fbc960453d37ad1db2fbd1ac27ce6f83c02b'
-    >>> hash160(privkey_to_pubkey(sha256(hexlify_("correct horse battery staple")),False))
+    
+    # 'correct horse batter staple'  brain wallet
+    # Can't use bitcoin_funcs because it imports this file
+    >>> correcthorseprivkey = int(sha256(hexlify_("correct horse battery staple")),16)
+    >>> pubX, pubY = ec_multiply(GENERATOR_POINT_XCOORD,GENERATOR_POINT_YCOORD,correcthorseprivkey)
+    >>> pubkey = str("04") + str(hexlify_(int(pubX),64)) + str(hexlify_(int(pubY),64))
+    >>> hash160(pubkey)
     'c4c5d791fcb4654a1ef5e03fe0ad3d9c598f9827'
     """
 

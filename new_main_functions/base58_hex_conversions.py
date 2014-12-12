@@ -1,6 +1,10 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Relative import off for doctests
+# from hexlify_permissive import *
+# from hash_funcs import *
+
 from .hexlify_permissive import *
 from .hash_funcs import *
 

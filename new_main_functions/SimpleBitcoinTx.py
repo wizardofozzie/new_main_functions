@@ -1,6 +1,20 @@
 ﻿#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Relative import off for doctests
+# from ec_math import *
+# from hexlify_permissive import *
+# from hash_funcs import *
+# from base58_hex_conversions import *
+# from bitcoin_funcs import *
+# from misc_funcs_and_vars import *
+# from CoinFromKey import *
+# from StealthAddress import *
+# from Bip32Key import *
+# from BIP39 import *
+# from ElectrumV1 import *
+# from DER_sign_and_verify import *
+
 from .ec_math import *
 from .hexlify_permissive import *
 from .hash_funcs import *
@@ -75,41 +89,42 @@ class SimpleBitcoinTx(object):
             raise Exception("Unknown error setting nLockTime")
         self.serialize_to_unsigned_tx()
 
-    @staticmethod
-    def varint_bytesize(bytelength_int):
-        if 'int' not in str(type(bytelength_int)) and 'long' not in str(type(bytelength_int)):
-            raise Exception("Input size must be int.")
-        try:
-            size = int(bytelength_int)
-        except:
-            raise Exception("Input size must be int.")
-        if size < 1:
-            raise Exception("Input size must be a positive number, not zero or negative.")
-        elif size > 18446744073709551615:
-            raise Exception("This is a joke, right?")
-        elif size < 253:
-            hexsize = hexlify_(size,2)
-            hexsize = str(hexsize)
-            assert len(hexsize) == 2
-        elif size < 65536:
-            hexsize = hexlify_(size,4)
-            assert len(hexsize) == 4
-            hexsize = reverse_bytes(hexsize)
-            hexsize = str(str("fd") + hexsize)
-            assert len(hexsize) == 6
-        elif size < 4294967296:
-            hexsize = hexlify_(size,8)
-            assert len(hexsize) == 8
-            hexsize = reverse_bytes(hexsize)
-            hexsize = str(str("fe") + hexsize)
-            assert len(hexsize) == 10
-        elif size < 18446744073709551616:
-            hexsize = hexlify_(size,16)
-            assert len(hexsize) == 16
-            hexsize = reverse_bytes(hexsize)
-            hexsize = str(str("ff") + hexsize)
-            assert len(hexsize) == 18
-        return hexsize
+# Did this elsewhere
+    # @staticmethod
+    # def varint_bytesize(bytelength_int):
+        # if 'int' not in str(type(bytelength_int)) and 'long' not in str(type(bytelength_int)):
+            # raise Exception("Input size must be int.")
+        # try:
+            # size = int(bytelength_int)
+        # except:
+            # raise Exception("Input size must be int.")
+        # if size < 1:
+            # raise Exception("Input size must be a positive number, not zero or negative.")
+        # elif size > 18446744073709551615:
+            # raise Exception("This is a joke, right?")
+        # elif size < 253:
+            # hexsize = hexlify_(size,2)
+            # hexsize = str(hexsize)
+            # assert len(hexsize) == 2
+        # elif size < 65536:
+            # hexsize = hexlify_(size,4)
+            # assert len(hexsize) == 4
+            # hexsize = reverse_bytes(hexsize)
+            # hexsize = str(str("fd") + hexsize)
+            # assert len(hexsize) == 6
+        # elif size < 4294967296:
+            # hexsize = hexlify_(size,8)
+            # assert len(hexsize) == 8
+            # hexsize = reverse_bytes(hexsize)
+            # hexsize = str(str("fe") + hexsize)
+            # assert len(hexsize) == 10
+        # elif size < 18446744073709551616:
+            # hexsize = hexlify_(size,16)
+            # assert len(hexsize) == 16
+            # hexsize = reverse_bytes(hexsize)
+            # hexsize = str(str("ff") + hexsize)
+            # assert len(hexsize) == 18
+        # return hexsize
 
     def add_input(self,txID,txid_vout,asm_hex="",redeemscript="",sequencenumber=4294967295):
         try:
@@ -269,7 +284,7 @@ class SimpleBitcoinTx(object):
             self.unsignedtx = str("")
             return
         self.unsignedtx = str("")
-        self.unsignedtx = str(self.versionhex) + str(SimpleBitcoinTx.varint_bytesize(len(self.inputs)))
+        self.unsignedtx = str(self.versionhex) + str(varint_bytesize(len(self.inputs)))
         for i in range(len(self.inputs)):
             self.unsignedtx = self.unsignedtx + str(reverse_bytes(self.inputs[i][0]))
             assert len(str(reverse_bytes(hexlify_(int(self.inputs[i][1]),8)))) == 8
@@ -277,12 +292,12 @@ class SimpleBitcoinTx(object):
             self.unsignedtx = self.unsignedtx + str("00")
             assert len(str(reverse_bytes(hexlify_(int(self.inputs[i][4]),8)))) == 8
             self.unsignedtx = self.unsignedtx + str(reverse_bytes(hexlify_(int(self.inputs[i][4]),8)))
-        self.unsignedtx = self.unsignedtx + str(SimpleBitcoinTx.varint_bytesize(len(self.outputs)))
+        self.unsignedtx = self.unsignedtx + str(varint_bytesize(len(self.outputs)))
         for i in range(len(self.outputs)):
             if self.outputs[i][0] == "OP_RETURN":
-                lenopreturndata = str(SimpleBitcoinTx.varint_bytesize(int(len(self.outputs[i][1]) // 2)))
+                lenopreturndata = str(varint_bytesize(int(len(self.outputs[i][1]) // 2)))
                 outputstr = str("6a") + lenopreturndata + str(self.outputs[i][1]) # OP_RETURN + size of data + data
-                totaloutputlen = str(SimpleBitcoinTx.varint_bytesize(int(len(outputstr) // 2)))
+                totaloutputlen = str(varint_bytesize(int(len(outputstr) // 2)))
                 self.unsignedtx = self.unsignedtx + str("0000000000000000") + totaloutputlen + outputstr
                                   # string of zeros is the amount of satoshis being sent.
                                   # This module doesn't allow money to be burned, so it's set to zero.
@@ -301,14 +316,14 @@ class SimpleBitcoinTx(object):
                     self.unsignedtx = str("")
                     raise Exception("Hash160 length error. Only normal bitcoin addresses, multisig addresses, and OP_RETURN are acceptable for outputs. This class is called 'SimpleBitcoinTx' for a reason!")
                 if outputhex[:2] == "05":
-                    asm = str("a9") + str(SimpleBitcoinTx.varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("87") # OP_HASH160 .... OP_EQUAL
+                    asm = str("a9") + str(varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("87") # OP_HASH160 .... OP_EQUAL
                 elif outputhex[:2] == "00":
-                    asm = str("76a9") + str(SimpleBitcoinTx.varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("88ac") # OP_DUP OP_HASH160 .... OP_EQUALVERIFY OP_CHECKSIG
+                    asm = str("76a9") + str(varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("88ac") # OP_DUP OP_HASH160 .... OP_EQUALVERIFY OP_CHECKSIG
                 else:
                     self.unsignedtx = str("")
                     raise Exception("Output " + str(i) + " is not a recognized address. Only 1BitcoinAddress and 3PaytoScriptHash address formats are valid. This class is called 'SimpleBitcoinTx' for a reason!")
                 asm = str(asm)
-                asmlen = SimpleBitcoinTx.varint_bytesize(int(len(asm) // 2))
+                asmlen = varint_bytesize(int(len(asm) // 2))
                 self.unsignedtx = self.unsignedtx + str(asmlen) + asm
         self.unsignedtx = self.unsignedtx + self.nlocktime
         self.unsignedtx = str(self.unsignedtx)
@@ -403,7 +418,7 @@ class SimpleBitcoinTx(object):
             raise Exception("All inputs and outputs must be added before any signatures can be made on the tx.")
         # Reconstruct tx from scratch
         sighashall_thisinput_tx = str("")
-        sighashall_thisinput_tx = str(self.versionhex) + str(SimpleBitcoinTx.varint_bytesize(len(self.inputs)))
+        sighashall_thisinput_tx = str(self.versionhex) + str(varint_bytesize(len(self.inputs)))
         for i in range(len(self.inputs)):
             sighashall_thisinput_tx = sighashall_thisinput_tx + str(reverse_bytes(self.inputs[i][0]))
             assert len(str(reverse_bytes(hexlify_(int(self.inputs[i][1]),8)))) == 8
@@ -417,12 +432,12 @@ class SimpleBitcoinTx(object):
                 sighashall_thisinput_tx = sighashall_thisinput_tx + str(asm_len) + str(self.inputs[tx_input_num][2])
             assert len(str(reverse_bytes(hexlify_(int(self.inputs[i][4]),8)))) == 8
             sighashall_thisinput_tx = sighashall_thisinput_tx + str(reverse_bytes(hexlify_(int(self.inputs[i][4]),8)))
-        sighashall_thisinput_tx = sighashall_thisinput_tx + str(SimpleBitcoinTx.varint_bytesize(len(self.outputs)))
+        sighashall_thisinput_tx = sighashall_thisinput_tx + str(varint_bytesize(len(self.outputs)))
         for i in range(len(self.outputs)):
             if self.outputs[i][0] == "OP_RETURN":
-                lenopreturndata = str(SimpleBitcoinTx.varint_bytesize(int(len(self.outputs[i][1]) // 2)))
+                lenopreturndata = str(varint_bytesize(int(len(self.outputs[i][1]) // 2)))
                 outputstr = str("6a") + lenopreturndata + str(self.outputs[i][1]) # OP_RETURN + size of data + data
-                totaloutputlen = str(SimpleBitcoinTx.varint_bytesize(int(len(outputstr) // 2)))
+                totaloutputlen = str(varint_bytesize(int(len(outputstr) // 2)))
                 sighashall_thisinput_tx = sighashall_thisinput_tx + str("0000000000000000") + totaloutputlen + outputstr
                                   # string of zeros is the amount of satoshis being sent.
                                   # This module doesn't allow money to be burned, so it's set to zero.
@@ -441,14 +456,14 @@ class SimpleBitcoinTx(object):
                     sighashall_thisinput_tx = str("")
                     raise Exception("Hash160 length error. Only normal bitcoin addresses, multisig addresses, and OP_RETURN are acceptable for outputs. This class is called 'SimpleBitcoinTx' for a reason!")
                 if outputhex[:2] == "05":
-                    asm = str("a9") + str(SimpleBitcoinTx.varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("87") # OP_HASH160 .... OP_EQUAL
+                    asm = str("a9") + str(varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("87") # OP_HASH160 .... OP_EQUAL
                 elif outputhex[:2] == "00":
-                    asm = str("76a9") + str(SimpleBitcoinTx.varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("88ac") # OP_DUP OP_HASH160 .... OP_EQUALVERIFY OP_CHECKSIG
+                    asm = str("76a9") + str(varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("88ac") # OP_DUP OP_HASH160 .... OP_EQUALVERIFY OP_CHECKSIG
                 else:
                     sighashall_thisinput_tx = str("")
                     raise Exception("Output " + str(i) + " is not a recognized address. Only 1BitcoinAddress and 3PaytoScriptHash address formats are valid. This class is called 'SimpleBitcoinTx' for a reason!")
                 asm = str(asm)
-                asmlen = SimpleBitcoinTx.varint_bytesize(int(len(asm) // 2))
+                asmlen = varint_bytesize(int(len(asm) // 2))
                 sighashall_thisinput_tx = sighashall_thisinput_tx + str(asmlen) + asm
         sighashall_thisinput_tx = sighashall_thisinput_tx + self.nlocktime # Add lock time
         sighashall_thisinput_tx = sighashall_thisinput_tx + str("01000000") # add SIGHASH_ALL to end
@@ -486,7 +501,7 @@ class SimpleBitcoinTx(object):
             raise Exception("All inputs and outputs must be added before any signatures can be made on the tx.")
         # Reconstruct tx from scratch
         sighashall_thisinput_tx = str("")
-        sighashall_thisinput_tx = str(self.versionhex) + str(SimpleBitcoinTx.varint_bytesize(len(self.inputs)))
+        sighashall_thisinput_tx = str(self.versionhex) + str(varint_bytesize(len(self.inputs)))
         for i in range(len(self.inputs)):
             sighashall_thisinput_tx = sighashall_thisinput_tx + str(reverse_bytes(self.inputs[i][0]))
             assert len(str(reverse_bytes(hexlify_(int(self.inputs[i][1]),8)))) == 8
@@ -494,16 +509,16 @@ class SimpleBitcoinTx(object):
             if i != tx_input_num:
                 sighashall_thisinput_tx = sighashall_thisinput_tx + str("00")
             else:
-                redeemscript_len = str(SimpleBitcoinTx.varint_bytesize(int(len(self.inputs[tx_input_num][3]) // 2)))
+                redeemscript_len = str(varint_bytesize(int(len(self.inputs[tx_input_num][3]) // 2)))
                 sighashall_thisinput_tx = sighashall_thisinput_tx + str(redeemscript_len) + str(self.inputs[tx_input_num][3])
             assert len(str(reverse_bytes(hexlify_(int(self.inputs[i][4]),8)))) == 8
             sighashall_thisinput_tx = sighashall_thisinput_tx + str(reverse_bytes(hexlify_(int(self.inputs[i][4]),8)))
-        sighashall_thisinput_tx = sighashall_thisinput_tx + str(SimpleBitcoinTx.varint_bytesize(len(self.outputs)))
+        sighashall_thisinput_tx = sighashall_thisinput_tx + str(varint_bytesize(len(self.outputs)))
         for i in range(len(self.outputs)):
             if self.outputs[i][0] == "OP_RETURN":
-                lenopreturndata = str(SimpleBitcoinTx.varint_bytesize(int(len(self.outputs[i][1]) // 2)))
+                lenopreturndata = str(varint_bytesize(int(len(self.outputs[i][1]) // 2)))
                 outputstr = str("6a") + lenopreturndata + str(self.outputs[i][1]) # OP_RETURN + size of data + data
-                totaloutputlen = str(SimpleBitcoinTx.varint_bytesize(int(len(outputstr) // 2)))
+                totaloutputlen = str(varint_bytesize(int(len(outputstr) // 2)))
                 sighashall_thisinput_tx = sighashall_thisinput_tx + str("0000000000000000") + totaloutputlen + outputstr
                                   # string of zeros is the amount of satoshis being sent.
                                   # This module doesn't allow money to be burned, so it's set to zero.
@@ -522,14 +537,14 @@ class SimpleBitcoinTx(object):
                     sighashall_thisinput_tx = str("")
                     raise Exception("Hash160 length error. Only normal bitcoin addresses, multisig addresses, and OP_RETURN are acceptable for outputs. This class is called 'SimpleBitcoinTx' for a reason!")
                 if outputhex[:2] == "05":
-                    asm = str("a9") + str(SimpleBitcoinTx.varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("87") # OP_HASH160 .... OP_EQUAL
+                    asm = str("a9") + str(varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("87") # OP_HASH160 .... OP_EQUAL
                 elif outputhex[:2] == "00":
-                    asm = str("76a9") + str(SimpleBitcoinTx.varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("88ac") # OP_DUP OP_HASH160 .... OP_EQUALVERIFY OP_CHECKSIG
+                    asm = str("76a9") + str(varint_bytesize(int(len(outputhex[2:]) // 2))) + str(outputhex[2:]) + str("88ac") # OP_DUP OP_HASH160 .... OP_EQUALVERIFY OP_CHECKSIG
                 else:
                     sighashall_thisinput_tx = str("")
                     raise Exception("Output " + str(i) + " is not a recognized address. Only 1BitcoinAddress and 3PaytoScriptHash address formats are valid. This class is called 'SimpleBitcoinTx' for a reason!")
                 asm = str(asm)
-                asmlen = SimpleBitcoinTx.varint_bytesize(int(len(asm) // 2))
+                asmlen = varint_bytesize(int(len(asm) // 2))
                 sighashall_thisinput_tx = sighashall_thisinput_tx + str(asmlen) + asm
         sighashall_thisinput_tx = sighashall_thisinput_tx + self.nlocktime # Add lock time
         sighashall_thisinput_tx = sighashall_thisinput_tx + str("01000000") # add SIGHASH_ALL to end
@@ -629,17 +644,17 @@ class SimpleBitcoinTx(object):
         assert len(self.inputs) != 0
         assert len(self.outputs) != 0
         assert len(self.unsignedtx) != 0 and self.unsignedtx != ""
-        self.partialtx = str(self.versionhex) + str(SimpleBitcoinTx.varint_bytesize(len(self.inputs)))
+        self.partialtx = str(self.versionhex) + str(varint_bytesize(len(self.inputs)))
         for i in range(len(self.inputs)):
             self.partialtx = str(self.partialtx) + str(reverse_bytes(self.inputs[i][0])) + str(reverse_bytes(hexlify_(int(self.inputs[i][1]),8)))
             if self.inputs[i][2][:6] == "76a914" and len(self.inputs[i][2]) == 50:
                 if self.sigs[i] == "":
                     self.partialtx = str(self.partialtx) + str("00")
                 else:
-                    siglen = SimpleBitcoinTx.varint_bytesize(int(len(self.sigs[i]) // 2))
-                    pubkeylen = SimpleBitcoinTx.varint_bytesize(int(len(self.sigspubkeylist[i]) // 2))
+                    siglen = varint_bytesize(int(len(self.sigs[i]) // 2))
+                    pubkeylen = varint_bytesize(int(len(self.sigspubkeylist[i]) // 2))
                     inputstr = str(siglen) + str(self.sigs[i]) + str(pubkeylen) + str(self.sigspubkeylist[i])
-                    inputstrlen = SimpleBitcoinTx.varint_bytesize(int(len(inputstr) // 2))
+                    inputstrlen = varint_bytesize(int(len(inputstr) // 2))
                     self.partialtx = str(self.partialtx) + str(inputstrlen) + str(inputstr)
             elif self.inputs[i][2][:4] == "a914" and len(self.inputs[i][2]) == 46:
                 #add 00 for extra checkmultisigverify byte
@@ -649,16 +664,16 @@ class SimpleBitcoinTx(object):
                     if self.sigs[i][j] == "":
                         continue
                     hasonesig = True
-                    siglen = SimpleBitcoinTx.varint_bytesize(int(len(str(self.sigs[i][j])) // 2))
+                    siglen = varint_bytesize(int(len(str(self.sigs[i][j])) // 2))
                     sigs_and_redeemscript = str(sigs_and_redeemscript) + str(siglen) + str(self.sigs[i][j])
                 if not hasonesig:
                     self.partialtx = str(self.partialtx) + str("00")
                 else:
                     assert self.inputs[i][3] != ""
-                    rs_len = SimpleBitcoinTx.varint_bytesize(int(len(str(self.inputs[i][3])) // 2))
+                    rs_len = varint_bytesize(int(len(str(self.inputs[i][3])) // 2))
                     sigs_and_redeemscript = str(sigs_and_redeemscript) + str("4c") + str(rs_len) + str(self.inputs[i][3])
                     sigs_and_redeemscript = str("00") + str(sigs_and_redeemscript) # for bug where OP_CHECKMULTISIG drops an extra byte
-                    srs_len = SimpleBitcoinTx.varint_bytesize(int(len(str(sigs_and_redeemscript)) // 2))
+                    srs_len = varint_bytesize(int(len(str(sigs_and_redeemscript)) // 2))
                     self.partialtx = str(self.partialtx) + str(srs_len) + str(sigs_and_redeemscript)
             else:
                 raise Exception("Error with inputs.")
@@ -666,7 +681,7 @@ class SimpleBitcoinTx(object):
             assert len(sequencebytes) == 8
             sequencebytes = reverse_bytes(sequencebytes)
             self.partialtx = str(self.partialtx) + str(sequencebytes)
-        self.partialtx = str(self.partialtx) + str(SimpleBitcoinTx.varint_bytesize(int(len(self.outputs))))
+        self.partialtx = str(self.partialtx) + str(varint_bytesize(int(len(self.outputs))))
         for i in range(len(self.outputs)):
             if self.outputs[i][0][:1] == "1":
                 amountinsatoshis = int(round(self.outputs[i][1],8) * 100000000)
@@ -679,9 +694,9 @@ class SimpleBitcoinTx(object):
                     raise Exception("Base58 decoding error for output number " + str(i) + " when attempting to decode.  Checksum mis-match or other error.")
                 outhex = str(outhex)[2:]
                 assert len(outhex) == 40
-                outhex_len = str(SimpleBitcoinTx.varint_bytesize(int(len(outhex) // 2)))
+                outhex_len = str(varint_bytesize(int(len(outhex) // 2)))
                 assert outhex_len == "14"
-                asm_len = str(SimpleBitcoinTx.varint_bytesize(int(len(str(str("76a9") + str(outhex_len) + str(outhex) + str("88ac"))) // 2)))
+                asm_len = str(varint_bytesize(int(len(str(str("76a9") + str(outhex_len) + str(outhex) + str("88ac"))) // 2)))
                 assert asm_len == "19"
                 self.partialtx = str(self.partialtx) + str(asm_len) + str("76a9") + str(outhex_len) + str(outhex) + str("88ac")
             elif self.outputs[i][0][:1] == "3":
@@ -695,9 +710,9 @@ class SimpleBitcoinTx(object):
                     raise Exception("Base58 decoding error for output number " + str(i) + " when attempting to decode.  Checksum mis-match or other error.")
                 outhex = str(outhex)[2:]
                 assert len(outhex) == 40
-                outhex_len = str(SimpleBitcoinTx.varint_bytesize(int(len(outhex) // 2)))
+                outhex_len = str(varint_bytesize(int(len(outhex) // 2)))
                 assert outhex_len == "14"
-                asm_len = str(SimpleBitcoinTx.varint_bytesize(int(len(str(str("a9") + str(outhex_len) + str(outhex) + str("87"))) // 2)))
+                asm_len = str(varint_bytesize(int(len(str(str("a9") + str(outhex_len) + str(outhex) + str("87"))) // 2)))
                 assert asm_len == "17"
                 self.partialtx = str(self.partialtx) + str(asm_len) + str("a9") + str(outhex_len) + str(outhex) + str("87")
             elif self.outputs[i][0] == "OP_RETURN":
@@ -707,9 +722,9 @@ class SimpleBitcoinTx(object):
                     opreturnhex = hexlify_(binascii.unhexlify(opreturnhex))
                 except:
                     raise Exception("Unknown error with OP_RETURN data on input " + str(i))
-                opreturnlen1 = str(SimpleBitcoinTx.varint_bytesize(int(len(opreturnhex) // 2)))
+                opreturnlen1 = str(varint_bytesize(int(len(opreturnhex) // 2)))
                 opreturn = str("6a") + str(opreturnlen) + str(opreturnhex)
-                opreturnlen2 = str(SimpleBitcoinTx.varint_bytesize(int(len(opreturn) // 2)))
+                opreturnlen2 = str(varint_bytesize(int(len(opreturn) // 2)))
                 self.partialtx = str(self.partialtx) + str(opreturnlen2) + str(opreturn)
         self.partialtx = str(self.partialtx) + self.nlocktime
         self.partialtx = str(self.partialtx)
@@ -1091,18 +1106,18 @@ class SimpleBitcoinTx(object):
         for i in range(num_multisig_inputs):
             #First we reconstruct the tx
             reconstructedtx = self.versionhex
-            reconstructedtx = reconstructedtx + SimpleBitcoinTx.varint_bytesize(num_inputs)
+            reconstructedtx = reconstructedtx + varint_bytesize(num_inputs)
             for j in range(len(self.inputs)):
                 reconstructedtx = reconstructedtx + reverse_bytes(self.inputs[j][0])
                 reconstructedtx = reconstructedtx + reverse_bytes(hexlify_(self.inputs[j][1],8))
                 if self.inputs[j][2][:4] == "a914" and i == num_multisig_inputs_checked_so_far:
                     assert len(self.inputs[j][3]) != 0
-                    rs_len = SimpleBitcoinTx.varint_bytesize(int(len(self.inputs[j][3]) / 2))
+                    rs_len = varint_bytesize(int(len(self.inputs[j][3]) / 2))
                     reconstructedtx = reconstructedtx + rs_len + str(self.inputs[j][3])
                 else:
                     reconstructedtx = reconstructedtx + str("00")
                 reconstructedtx = reconstructedtx + reverse_bytes(hexlify_(int(self.inputs[j][4]),8))
-            reconstructedtx = reconstructedtx + SimpleBitcoinTx.varint_bytesize(num_outputs)
+            reconstructedtx = reconstructedtx + varint_bytesize(num_outputs)
             for j in range(num_outputs):
                 if self.outputs[j][0][:1] == "1":
                     amountsatoshis = reverse_bytes(hexlify_(int(float(self.outputs[j][1]) * 100000000),16))
@@ -1133,11 +1148,11 @@ class SimpleBitcoinTx(object):
                 elif self.outputs[j][0] == "OP_RETURN":
                     reconstructedtx = reconstructedtx + str("0000000000000000")
                     new_asm = str(self.outputs[j][1])
-                    opreturn_len = str(SimpleBitcoinTx.varint_bytesize(int(len(new_asm) / 2)))
+                    opreturn_len = str(varint_bytesize(int(len(new_asm) / 2)))
                     new_asm = str("6a") + opreturn_len + new_asm
                 else:
                     raise Exception("Problem with output number " + str(j) + " in imported tx while verifying multisig keys.")
-                new_asm_len = str(SimpleBitcoinTx.varint_bytesize(int(len(new_asm) / 2)))
+                new_asm_len = str(varint_bytesize(int(len(new_asm) / 2)))
                 new_asm = str(new_asm_len + new_asm)
                 reconstructedtx = str(reconstructedtx + new_asm_len + new_asm)
             reconstructedtx = reconstructedtx + self.nlocktime
