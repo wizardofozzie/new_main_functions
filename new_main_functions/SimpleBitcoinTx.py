@@ -32,7 +32,11 @@ class SimpleBitcoinTx(object):
     """
     Create from scratch, or import and break down into component parts, a SIMPLE bitcoin transaction.  Emphasis on SIMPLE.  Acceptable address types for inputs and outputs are normal bitcoin addresses and multisig P2SH addresses (but only multisig, not other P2SH scripts).  Additionally, a single OP_RETURN output can be added.  No other types of things can be done.  This method doesn't check provided signatures (although it makes valid new ones for created tx's).  It will probably fail in edge cases and some regular testing.  I wrote it just to prove to myself I understood basically how transactions worked.  DO NOT USE THIS FOR ANYTHING IMPORTANT.
 
-    TODO:  Write doctests, check for bugs, fix bugs. Make sure doctests cover all use cases.
+    WARNING:  Not all variables may be properly cleared when exceptions are raised, so if you run into an exception during use of this class, you must START A NEW ONE, DO NOT CONTINUE WITH THE SAME OBJECT.
+
+    All those caveats and warnings aside, by god this sucker actually works.
+
+    TODO:  Write doctests, check for bugs, fix bugs, reset relevant variables on exceptions, make sure doctests cover all use cases.
     """
 
     def __init__(self,input_tx="",importedredeemscripts=[],txversion=1):
