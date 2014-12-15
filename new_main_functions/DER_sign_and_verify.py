@@ -88,7 +88,7 @@ def sign_hash(hash,privkey,randnonce=str("RFC6979_SHA256"),compresspubkeyout=Tru
     if int(r[:2],16) > 127:
         r = str(str("00") + str(r))
         assert len(r) == 66
-    if int(s[:2],16) > 127:
+    if int(s[:2],16) > 127: # Should never happen now that S is always low.
         s = str(str("00") + str(s))
         assert len(s) == 66
     if len(r) == 66:
