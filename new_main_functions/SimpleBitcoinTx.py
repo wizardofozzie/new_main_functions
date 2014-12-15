@@ -59,6 +59,45 @@ class SimpleBitcoinTx(object):
                 self.input_tx = download_tx_hex_from_id(self.input_tx)
             self.breakdown_tx(importedredeemscripts)
 
+    def get_total_in(self):
+        self.totalin = 0
+        for i in range(len(self.inputs)):
+            tempasm, amount = SimpleBitcoinTx.get_asm_and_amount_satoshis_from_tx_hex(self.inputs[i][0],self.inputs[i][1])
+            tempasm = None
+            self.totalin = self.totalin + amount
+        self.totalin = round(float(self.totalin) / 100000000.0,8)
+        tempstr = str(self.totalin)
+        numzeros = 0
+        while True:
+            if tempstr[:-1] == "0" and numzeros < 9:
+                numzeros = numzeros + 1
+                tempstr = tempstr[:-1]
+            else:
+                break
+        if numzeros == 8:
+            self.totalin = int(self.totalin)
+        else:
+            self.totalin = round(self.totalin,8-numzeros)
+        return self.totalin
+
+    def get_total_out(self):
+        self.totalout = 0
+        for i in range(len(self.outputs)):
+            if self.outputs[i][0] != "OP_RETURN":
+                self.totalout = self.totalout + self.outputs[i][1]
+        return self.totalout
+
+    def get_fee(self):
+        self.fee = self.get_total_in() - self.get_total_out()
+        if self.fee < 0:
+            self.fee = None
+            raise Exception("Calculated fee amount is less than zero.  Please finish adding inputs and outputs before running this method.")
+        elif self.fee > 0.01:
+            self.fee = None
+            raise Exception("Calculated fee amount is greater than 0.01 bitcoins.  Either a mistake has been made or you havne't finished adding outputs.  Please finish adding outputs and run this method again.")
+        else:
+            return self.fee
+
     def set_nlocktime(self,nlocktimeint):
         self.nlocktimeint = 0
         self.nlocktime = str("00000000")
@@ -88,43 +127,6 @@ class SimpleBitcoinTx(object):
             self.nlocktimeint = 0
             raise Exception("Unknown error setting nLockTime")
         self.serialize_to_unsigned_tx()
-
-# Did this elsewhere
-    # @staticmethod
-    # def varint_bytesize(bytelength_int):
-        # if 'int' not in str(type(bytelength_int)) and 'long' not in str(type(bytelength_int)):
-            # raise Exception("Input size must be int.")
-        # try:
-            # size = int(bytelength_int)
-        # except:
-            # raise Exception("Input size must be int.")
-        # if size < 1:
-            # raise Exception("Input size must be a positive number, not zero or negative.")
-        # elif size > 18446744073709551615:
-            # raise Exception("This is a joke, right?")
-        # elif size < 253:
-            # hexsize = hexlify_(size,2)
-            # hexsize = str(hexsize)
-            # assert len(hexsize) == 2
-        # elif size < 65536:
-            # hexsize = hexlify_(size,4)
-            # assert len(hexsize) == 4
-            # hexsize = reverse_bytes(hexsize)
-            # hexsize = str(str("fd") + hexsize)
-            # assert len(hexsize) == 6
-        # elif size < 4294967296:
-            # hexsize = hexlify_(size,8)
-            # assert len(hexsize) == 8
-            # hexsize = reverse_bytes(hexsize)
-            # hexsize = str(str("fe") + hexsize)
-            # assert len(hexsize) == 10
-        # elif size < 18446744073709551616:
-            # hexsize = hexlify_(size,16)
-            # assert len(hexsize) == 16
-            # hexsize = reverse_bytes(hexsize)
-            # hexsize = str(str("ff") + hexsize)
-            # assert len(hexsize) == 18
-        # return hexsize
 
     def add_input(self,txID,txid_vout,asm_hex="",redeemscript="",sequencenumber=4294967295):
         try:
@@ -179,7 +181,7 @@ class SimpleBitcoinTx(object):
                 raise Exception("Redeem script does not appear to be hex")
             else:
                 redeemscript = hexlify_(test)
-                assert binascii.unhexlify(redeemscript) == binascii.unhexlify(test)
+                assert binascii.unhexlify(redeemscript) == test
                 test = None
         self.inputs.append([txID,txid_vout,asm,redeemscript,sequencenumber])
         try:
@@ -196,7 +198,7 @@ class SimpleBitcoinTx(object):
                 self.serialize_to_unsigned_tx()
                 raise Exception("Redeem script not provided for multisig input")
             try:
-                m_num_keys, y = self.validate_redeem_script_and_return_keys(redeemscript)
+                m_num_keys, y = SimpleBitcoinTx.validate_redeem_script_and_return_keys(redeemscript)
             except Exception as e:
                 del self.inputs[-1]
                 self.serialize_to_unsigned_tx()
@@ -256,7 +258,7 @@ class SimpleBitcoinTx(object):
             if addresshex[:2] != "00":
                 raise Exception("Hash160 does not begin with '00' even though base58 string begins with 1. This exception should never happen.")
             try:
-                outputamount = float(tempvar2)
+                outputamount = round(float(tempvar2),8)
             except:
                 raise Exception("Output amount (second input variable) must be a number (int or float or str(int)/str(float))")
         elif tempvar[:1] == "3":
@@ -271,7 +273,7 @@ class SimpleBitcoinTx(object):
             if addresshex[:2] != "05":
                 raise Exception("Hash160 does not begin with '05' even though base58 string begins with 3. This exception should never happen.")
             try:
-                outputamount = float(tempvar2)
+                outputamount = round(float(tempvar2),8)
             except:
                 raise Exception("Output amount (second input variable) must be a number (int or float or str(int)/str(float))")
         else:
@@ -330,7 +332,7 @@ class SimpleBitcoinTx(object):
 
     def add_multisig_amount_to_sigs_len(self,redeemscript):
         try:
-            m_num_keys, y = self.validate_redeem_script_and_return_keys(redeemscript)
+            m_num_keys, y = SimpleBitcoinTx.validate_redeem_script_and_return_keys(redeemscript)
         except Exception as e:
             raise Exception(str(e))
         else:
@@ -554,16 +556,24 @@ class SimpleBitcoinTx(object):
         uncompressedpubkey = uncompress_pubkey(compressedpubkey)
         newsig = str(newsig + str("01")) # add SIGHASH_ALL to end of sig
         try:
-            num_sigs_req, pubkeylist = self.validate_redeem_script_and_return_keys(self.inputs[tx_input_num][3])
+            num_sigs_req, pubkeylist = SimpleBitcoinTx.validate_redeem_script_and_return_keys(self.inputs[tx_input_num][3])
         except:
             raise Exception("Error validating redeem script for input that is attempting to be signed.")
         if compressedpubkey in pubkeylist:
             self.sigs[tx_input_num].append(str(newsig))
+            # if self.sigs[tx_input_num][0] == "":
+                # del self.sigs[tx_input_num][0]
             self.sigspubkeylist[tx_input_num].append(str(compressedpubkey))
+            # if self.sigspubkeylist[tx_input_num][0] == "":
+                # del self.sigspubkeylist[tx_input_num][0]
             self.sort_multisig_input_sigs_and_keys_to_redeemscript_order(tx_input_num)
         elif uncompressedpubkey in pubkeylist:
             self.sigs[tx_input_num].append(str(newsig))
+            # if self.sigs[tx_input_num][0] == "":
+                # del self.sigs[tx_input_num][0]
             self.sigspubkeylist[tx_input_num].append(str(uncompressedpubkey))
+            # if self.sigspubkeylist[tx_input_num][0] == "":
+                # del self.sigspubkeylist[tx_input_num][0]
             self.sort_multisig_input_sigs_and_keys_to_redeemscript_order(tx_input_num)
         else:
             raise Exception("Signature key does not appear to be in redeemscript list of keys.")
@@ -608,11 +618,17 @@ class SimpleBitcoinTx(object):
         for item in self.sigspubkeylist[tx_input_num]:
             unsorted_pubkeylist.append(str(item))
         try:
-            x, sortedpubkeylist = validate_redeem_script_and_return_keys(redeemscript)
+            x, sortedpubkeylist = SimpleBitcoinTx.validate_redeem_script_and_return_keys(redeemscript)
         except Exception as e:
             raise Exception(str(e))
         else:
-            if len(self.sigs[tx_input_num]) > x or len(self.sigspubkeylist[tx_input_num]) > x:
+            # if len(self.sigs[tx_input_num]) > x:
+                # if self.sigs[tx_input_num][0] == "":
+                    # del self.sigs[tx_input_num][0]
+            # if len(self.sigspubkeylist[tx_input_num]) > x:
+                # if self.sigspubkeylist[tx_input_num][0] == "":
+                    # del self.sigspubkeylist[tx_input_num][0]
+            if len(self.sigs[tx_input_num]) > x+1 or len(self.sigspubkeylist[tx_input_num]) > x+1:
                 raise Exception("Length of sig list or pubkey list greater than m for redeem script.")
         newsortedsiglist = []
         newsortedpubkeylist = []
@@ -623,9 +639,11 @@ class SimpleBitcoinTx(object):
                 newsortedpubkeylist.append(str(self.sigspubkeylist[tx_input_num][itemindex]))
         assert len(self.sigspubkeylist[tx_input_num]) == len(self.sigs[tx_input_num])
         listlen = len(self.sigs[tx_input_num])
-        for i in range(listlen):
-            del self.sigs[tx_input_num][i]
-            del self.sigspubkeylist[tx_input_num][i]
+        i = 0
+        while i < listlen:
+            del self.sigs[tx_input_num][0]
+            del self.sigspubkeylist[tx_input_num][0]
+            i = i+1
         assert len(self.sigspubkeylist[tx_input_num]) == 0
         assert len(self.sigs[tx_input_num]) == 0
         assert len(newsortedsiglist) == len(newsortedpubkeylist)
@@ -637,6 +655,8 @@ class SimpleBitcoinTx(object):
             self.sigspubkeylist[tx_input_num].append(str(""))
         assert len(self.sigspubkeylist[tx_input_num]) == len(self.sigs[tx_input_num])
         assert len(self.sigspubkeylist) == len(self.sigs)
+        if len(self.sigs[tx_input_num]) > x or len(self.sigspubkeylist[tx_input_num]) > x:
+            raise Exception("Length of sig list or pubkey list greater than m for redeem script. (2)")
         x, sortedpubkeylist, newsortedsiglist, newsortedpubkeylist, unsorted_pubkeylist = None, None, None, None, None
 
     def update_tx_with_sigs(self):
@@ -660,7 +680,7 @@ class SimpleBitcoinTx(object):
                 #add 00 for extra checkmultisigverify byte
                 sigs_and_redeemscript = str("")
                 hasonesig = False
-                for j in len(self.sigs[i]):
+                for j in range(len(self.sigs[i])):
                     if self.sigs[i][j] == "":
                         continue
                     hasonesig = True
@@ -1046,7 +1066,7 @@ class SimpleBitcoinTx(object):
             num_outputs = SimpleBitcoinTx.return_int_from_varint_bytes(remainingtx[:2])
             remainingtx = remainingtx[2:]
         for i in range(num_outputs):
-            amount = float(float(int(reverse_bytes(remainingtx[:16]),16)) / 100000000.0)
+            amount = round(float(round(float(int(reverse_bytes(remainingtx[:16]),16)),8) / 100000000.0),8)
             remainingtx = remainingtx[16:]
             if remainingtx[:2] == "ff":
                 asm_len = SimpleBitcoinTx.return_int_from_varint_bytes(remainingtx[:18])
