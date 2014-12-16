@@ -66,11 +66,11 @@ class SimpleBitcoinTx(object):
     def get_total_in(self):
         self.totalin = 0
         for i in range(len(self.inputs)):
-            tempasm, amount = SimpleBitcoinTx.get_asm_and_amount_satoshis_from_tx_hex(self.inputs[i][0],self.inputs[i][1])
+            tempasm, amount = SimpleBitcoinTx.get_asm_and_amount_satoshis_from_tx_hex(SimpleBitcoinTx.download_tx_hex_from_id(self.inputs[i][0]),self.inputs[i][1])
             tempasm = None
             self.totalin = self.totalin + amount
         self.totalin = round(float(self.totalin) / 100000000.0,8)
-        tempstr = str(self.totalin)
+        tempstr = str(format(self.totalin,".8f"))
         numzeros = 0
         while True:
             if tempstr[:-1] == "0" and numzeros < 9:
@@ -92,7 +92,19 @@ class SimpleBitcoinTx(object):
         return self.totalout
 
     def get_fee(self):
-        self.fee = self.get_total_in() - self.get_total_out()
+        self.fee = round(self.get_total_in() - self.get_total_out(),8)
+        tempstr = str(format(self.fee,".8f"))
+        numzeros = 0
+        while True:
+            if tempstr[:-1] == "0" and numzeros < 9:
+                numzeros = numzeros + 1
+                tempstr = tempstr[:-1]
+            else:
+                break
+        if numzeros == 8:
+            self.fee = int(self.fee)
+        else:
+            self.fee = float(round(self.fee,8-numzeros))
         if self.fee < 0:
             self.fee = None
             raise Exception("Calculated fee amount is less than zero.  Please finish adding inputs and outputs before running this method.")
