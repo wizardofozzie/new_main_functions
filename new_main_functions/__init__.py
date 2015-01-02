@@ -33,6 +33,7 @@ import hmac
 # from DER_sign_and_verify import *
 # from SimpleBitcoinTx import * # Not bug-checked yet, do not use!!!
 # from msg_sign_and_verify import *
+# from openassets import *
 
 from .ec_math import *
 from .hexlify_permissive import *
@@ -49,6 +50,7 @@ from .ElectrumV2Seed import * # Not bug-checked yet, do not use!!!
 from .DER_sign_and_verify import *
 from .SimpleBitcoinTx import * # Not bug-checked yet, do not use!!!
 from .msg_sign_and_verify import *
+from .openassets import *
 
 # TODO:  Write doctests for SimpleBitcoinTx, check for bugs, fix bugs. Make sure doctests cover all use cases.
 
