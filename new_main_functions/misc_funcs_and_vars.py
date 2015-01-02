@@ -15,6 +15,9 @@ def normalize_input(input):
     input = str(unicodedata.normalize('NFC',input))
     return str(input)
 
+def string_to_normalized_hexstr(input, char_encoding="utf-8"):
+    return hexlify_(binascii.unhexlify(binascii.hexlify(bytearray(normalize_input(input),char_encoding))))
+
 def reverse_bytes(hexstrinput):
     """
     Reverses bytes of a hex string input.
@@ -106,6 +109,60 @@ def bytesize_to_varint(inputhex):
         outputint = int(inputhex[:2],16)
         byte_len_to_trim_incl_firstbyte = int(1)
     return int(outputint), int(byte_len_to_trim_incl_firstbyte)
+
+def int_to_unsigned_LEB128(intinput):
+    """
+    >>> int_to_unsigned_LEB128(624485)
+    'e58e26'
+    """
+
+    if 'int' not in str(type(intinput)) and 'long' not in str(type(intinput)):
+        raise Exception("Input must be integer.")
+    binaryint = str(bin(intinput)).lstrip("0b").replace("b","").replace("L","").replace("'","").replace('"',"")
+    if len(binaryint) % 7:
+        binaryint = binaryint.zfill(len(binaryint) + 7 - (len(binaryint) % 7))
+    assert not len(binaryint) % 7
+    bytelist = str("")
+    for i in range(int(len(binaryint) / 7)):
+        if i < (int(len(binaryint) / 7) - 1):
+            pad = str("1")
+        else:
+            pad = str("0")
+        currbyte = binaryint[int(len(binaryint) - (7*i + 7)):int(len(binaryint) - (7*i))]
+        currbyte = str(str(pad) + str(currbyte))
+        assert len(currbyte) == 8
+        currbyte = hexlify_(int(currbyte,2))
+        assert len(currbyte) == 2
+        bytelist = bytelist + str(currbyte)
+    try:
+        testvar = binascii.unhexlify(bytelist)
+    except Exception as e:
+        raise Exception("Error testing output:  " + str(e))
+    else:
+        return hexlify_(testvar)
+
+def unsigned_LEB128_to_int(LEBinput):
+    """
+    >>> unsigned_LEB128_to_int("e58e26")
+    624485
+    """
+
+    try:
+        LEBinput = hexlify_(binascii.unhexlify(LEBinput))
+    except Exception as e:
+        raise Exception("Input not hex. Exception raised was:  " + str(e))
+    reversedbytes = reverse_bytes(LEBinput)
+    assert len(reversedbytes) == len(LEBinput)
+    binstr = str("")
+    for i in range(int(len(LEBinput) / 2)):
+        if i == 0:
+            assert int(reversedbytes[2*i:(2*i + 2)],16) < 128
+        else:
+            assert int(reversedbytes[2*i:(2*i + 2)],16) >= 128
+        tempbin = str(str(bin(int(reversedbytes[2*i:(2*i + 2)],16))).lstrip("0b").replace("b","").replace("L","").replace("'","").replace('"',"").zfill(8))
+        assert len(tempbin) == 8
+        binstr = binstr + tempbin[1:]
+    return int(binstr,2)
 
 class MerkleTree_DoubleSHA256(object):
     """

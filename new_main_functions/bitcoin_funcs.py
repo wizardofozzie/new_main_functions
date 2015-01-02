@@ -74,10 +74,12 @@ def compress_pubkey(uncompressedPubKey):
         outputHexStr = '02' + x_coordStr
     return hexlify_(unhexlify_(outputHexStr))
 
-def privkey_to_hexstr(privkey_unknownformat):
+def privkey_to_hexstr(privkey_unknownformat,outputifcompressed=False,outputversionbyte=False):
     # Most functions and methods still require hex privkey inputs.
     # This function is just to make that hex easier to get.
     # I avoided having other functions call this one in order to force myself to be more clear when I code.
+    # If outputifcompressed is True, output will be a tuple with the second output being -1 for unknown, 0 for uncompressed, and 1 for compressed. Hex/int input will yeild -1, WIF input will yeild 0 or 1.
+    # If outputversionbyte is True, third output (or second if outputifcompressed is False) will be a hexstr of the private key version byte, or False if hex/int is input and thus it is not known.
     """
     >>> privkey_to_hexstr("24A40CD9E3ACAAB0E575F1E938C466EE4A0DB6C68F00955F850237B10FE1F906")
     '24a40cd9e3acaab0e575f1e938c466ee4a0db6c68f00955f850237b10fe1f906'
@@ -87,21 +89,53 @@ def privkey_to_hexstr(privkey_unknownformat):
     '24a40cd9e3acaab0e575f1e938c466ee4a0db6c68f00955f850237b10fe1f906'
     >>> privkey_to_hexstr("WTchpuheKesrXXy5NhJZutzvs5z8ThPWveUX4JdxnWZVwYVkj3Qa")
     '24a40cd9e3acaab0e575f1e938c466ee4a0db6c68f00955f850237b10fe1f906'
+    >>> privkey_to_hexstr("KxSwET7mtjq6Lo2Y7KHAPYHMCEipBz8uNHFGL43EvY3xx3KKN2C2",True,True)
+    ('24a40cd9e3acaab0e575f1e938c466ee4a0db6c68f00955f850237b10fe1f906', 1, '80')
+    >>> privkey_to_hexstr("24A40CD9E3ACAAB0E575F1E938C466EE4A0DB6C68F00955F850237B10FE1F906",True,True)
+    ('24a40cd9e3acaab0e575f1e938c466ee4a0db6c68f00955f850237b10fe1f906', -1, False)
     """
 
+    compressed = 'Unknown'
+    versionbyte = 'Unknown'
     try:
-        privkey = hexlify_(unhexlify_(privkey_unknownformat))
+        privkey = hexlify_(unhexlify_(privkey_unknownformat)) # unhexlify_() takes int/long input and hexlifies and then unhexlifies it, so this function works with hex or integer input.
     except:
         privkey, isValid = base58_decode(privkey_unknownformat,True,False)
         if not isValid:
             raise Exception("Base58 checksum mis-match on decode")
+    if len(privkey) == 66:
+        versionbyte = privkey[:2]
+        privkey = privkey[2:]
+        compressed = False
     if len(privkey) == 68:
         assert privkey[-2:] == "01"
-        privkey = privkey[:-2]
-    if len(privkey) == 66:
-        privkey = privkey[2:]
+        versionbyte = privkey[:2]
+        privkey = privkey[2:-2]
+        compressed = True
     assert len(privkey) == 64
-    return hexlify_(binascii.unhexlify(privkey))
+    privkey = hexlify_(binascii.unhexlify(privkey)) # extra sanitization step, probably should remove, not sure if useful
+    if compressed == 'Unknown':
+        compressed = int(-1)
+    elif compressed:
+        compressed = int(1)
+    elif not compressed:
+        compressed = int(0)
+    else:
+        raise Exception("Error reading compress variable")
+    if versionbyte == 'Unknown':
+        versionbyte = False
+    if versionbyte:
+        assert len(versionbyte) == 2
+    if outputifcompressed:
+        if outputversionbyte:
+            return privkey, compressed, versionbyte
+        else:
+            return privkey, compressed
+    else:
+        if outputversionbyte:
+            return privkey, versionbyte
+        else:
+            return privkey
 
 def privkey_to_pubkey(privkey,compressed=True):
     """

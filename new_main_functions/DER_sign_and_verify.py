@@ -114,7 +114,7 @@ def verify_sig(hash,DERsig,pubkey):
 
     All inputs must be hex str.
 
-    DER sig input should NOT have the 0x01 SIGHASH_ALL byte at the end.
+    DER sig input should NOT have the SIGHASH type byte at the end.
 
     Outputs True/False
 

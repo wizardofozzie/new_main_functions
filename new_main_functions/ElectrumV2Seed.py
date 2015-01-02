@@ -62,7 +62,7 @@ class ElectrumV2EngSeed(object):
         n = int(ceil(log(custom_entropy,2)))
         k = len(prefix)*4
         n_added = int(max(16, k + numbits - n))
-        numbytes = int(ceil(n_added/8))
+        numbytes = int(ceil(n_added/8.0))
         while True:
             my_entropy = int(hexlify_(os.urandom(numbytes)),16)
             if my_entropy < 2**n_added:
