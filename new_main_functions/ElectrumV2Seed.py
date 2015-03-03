@@ -137,7 +137,8 @@ class ElectrumV2EngSeed(object):
         else:
             i = None
         password = str(password)
-        presalt = 'mnemonic'
+        # presalt = 'mnemonic'
+        presalt = 'electrum'
         if int(sys.version_info.major) == 2:
             words = unicode(words)
             password = unicode(password)

@@ -70,17 +70,24 @@ class CoinFromKey(object):
         super(CoinFromKey,self).__init__()
         try:
             self.test1 = binascii.unhexlify(keyinput)
-            self.test1 = ""
-            self.keyinput = str(keyinput)
+            self.keyinput = hexlify_(self.test1)
+            self.test1 = None
             assert len(self.keyinput) == 64 or len(self.keyinput) == 66 or len(self.keyinput) == 130
         except:
             raise TypeError("First input must be a hexstr public or private key of 64, 66, or 130 chars in length.")
         try:
             self.test1 = binascii.unhexlify(pubversionbyte)
-            self.test1 = ""
-            self.versionbyte = str(pubversionbyte)
-            assert len(pubversionbyte) == 2
-            assert int(pubversionbyte,16) < int('80',16) and int(pubversionbyte,16) > -1
+            try:
+                self.xxxxx = int(self.test1)
+            except:
+                self.versionbyte = hexlify_(self.test1)
+            else:
+                self.xxxxx = None
+                assert len(pubversionbyte) == 2
+                self.versionbyte = str(pubversionbyte)
+            self.test1 = None
+            assert len(self.versionbyte) == 2
+            assert int(self.versionbyte,16) < int('80',16) and int(self.versionbyte,16) > -1
         except:
             raise TypeError("Second input must be a 2-char hex version byte for the public key of the coin type")
         self.preferCompressed = preferCompressed

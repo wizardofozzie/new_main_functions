@@ -352,9 +352,17 @@ def pubkey_to_address(pubKey,versionbyte='00'):
     except:
         raise TypeError("Public key input is not hex or is odd length.")
     try:
-        versionbyte = hexlify_(binascii.unhexlify(versionbyte))
+        test1 = binascii.unhexlify(versionbyte)
+        try:
+            xxxxx = int(test1)
+        except:
+            versionbyte = hexlify_(test1)
+        else:
+            xxxxx = None
+            assert len(versionbyte) == 2
+            versionbyte = str(versionbyte)
         test = int(versionbyte,16)
-        test = ""
+        test = None
     except:
         raise TypeError("Version byte input is not hex or is odd length.")
     hash160str = hash160(pubKey)
